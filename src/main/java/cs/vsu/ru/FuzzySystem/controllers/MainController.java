@@ -1,12 +1,19 @@
 package cs.vsu.ru.FuzzySystem.controllers;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import cs.vsu.ru.FuzzySystem.FuzzySystemApplication;
+import cs.vsu.ru.FuzzySystem.model.Function;
+import cs.vsu.ru.FuzzySystem.model.Method;
+import cs.vsu.ru.FuzzySystem.model.Rule;
 import cs.vsu.ru.FuzzySystem.services.FuzzySystemService;
 
 @CrossOrigin(origins = "http://localhost:8081")
@@ -17,23 +24,13 @@ public class MainController {
     @Autowired
     private FuzzySystemService fService;
 
-    @GetMapping("/test")
-    public String test() {
-        return "wot otvet";
+    @PostMapping(value = "/evualation")
+    public String getEvualation(@RequestBody Method rules) {
+        return rules.getName();
     }
 
-    @GetMapping("/graphic")
-    public String graphic() {
-        
-        return "wot otvet";
-    }
-
-    @PostMapping("/")
-    public String tse(){
-        return "wot otvet";
-    }
     @PostMapping("/input_file")
-    public String index(@RequestParam("input_file")MultipartFile file){
+    public String index(@RequestParam("input_file") MultipartFile file) {
         return file.getName();
     }
 }

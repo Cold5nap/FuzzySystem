@@ -9,11 +9,18 @@ export default createStore({
       outputVariables: null,
       isLoading: false,
       graphic: null,
+      selectedOperator: null,
+      selectedAlgorithm: null,
+      selectedAccumulation: null,
+      selectedActivator: null,
     };
   },
   getters: {
     getGraphic(state) {
       return state.graphic;
+    },
+    getRules(state) {
+      return state.rules;
     },
   },
   mutations: {
@@ -32,9 +39,15 @@ export default createStore({
   },
   actions: {
     async getGraphicFromApi({ commit, state }) {
-      return axios("/api/graphic", {
-        headers: { "content-type": "JSON" },
-      })
+      console.log(JSON.stringify(state.rules[0].actions[0].variable.method));
+      return axios
+        .post(
+          "http://localhost:8080/api/evualation",
+          { rules: JSON.stringify(state.rules[0].actions[0].variable.method) },
+          {
+            headers: { "content-type": "application/json" },
+          }
+        )
         .then((response) => {
           state.isLoading = true;
           console.log(response.data);

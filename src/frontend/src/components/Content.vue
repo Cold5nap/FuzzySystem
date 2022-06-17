@@ -2,11 +2,7 @@
   <div class="container border rounded p-2">
     <div class="my-2">
       <input type="file" hidden class="form-file-input" id="customFile" />
-      <label
-        class="form-file-label btn-sm btn-success"
-        for="customFile"
-        style="cursor: pointer"
-      >
+      <label class="form-file-label btn-sm btn-success" for="customFile" style="cursor: pointer">
         Загрузить файл формата fcl
       </label>
     </div>
@@ -30,14 +26,10 @@
 
     <div id="buttons" class="row row-cols-auto my-2">
       <div class="col">
-        <button class="btn btn-sm btn-success" @click="getResult">
-          Получить итоговый график
-        </button>
+        <button class="btn btn-sm btn-success" @click="getResult">Получить итоговый график</button>
       </div>
       <div class="col">
-        <button class="btn btn-sm btn-success">
-          Экспортировать файл FCL построенной системы.
-        </button>
+        <button class="btn btn-sm btn-success">Экспортировать файл FCL построенной системы.</button>
       </div>
     </div>
   </div>
@@ -49,12 +41,6 @@ import TypesContent from "@/components/TypesContent";
 import ChartContent from "@/components/ChartContent";
 import VariablesContent from "@/components/VariablesContent";
 import RulesContent from "@/components/RulesContent";
-import FuzzificationMethod from "../services/FuzzificationMethod";
-import Type from "../services/Type";
-import InputVariable from "../services/InputVariable";
-import OutputVariable from "../services/OutputVariable";
-import Term from "../services/Term";
-import DefuzzificationMethod from "@/services/DefuzzificationMethod";
 
 export default {
   name: "ContentComponent",
@@ -67,16 +53,11 @@ export default {
   data() {
     return {
       termFunctions: [
-        new FuzzificationMethod("Треугольная", [1, 2, 3]),
-        new FuzzificationMethod("Прямоугольная", [1, 3]),
-        new FuzzificationMethod("Трапецеидальная", [1, 2, 3, 4]),
+        { name: "Треугольная", points: [1, 2, 3] },
+        { name: "Прямоугольная", points: [1, 3] },
+        { name: "Трапецеидальная", points: [1, 2, 3, 4] },
       ],
-      defuzzificationMethods: [
-        new DefuzzificationMethod("COG"),
-        new DefuzzificationMethod("COGS"),
-        new DefuzzificationMethod("LM"),
-        new DefuzzificationMethod("RM"),
-      ],
+      defuzzificationMethods: [{ name: "COG" }, { name: "COGS" }, { name: "LM" }, { name: "RM" }],
       types: null,
       inputVariables: null,
       outputVariables: null,
@@ -85,39 +66,41 @@ export default {
     };
   },
   created() {
+    //Вводим начальные данные
     this.types = [
-      new Type("point", [
-        new Term("bsas", new FuzzificationMethod("Прямоугольная", [1, 3])),
-        new Term(
-          "other",
-          new FuzzificationMethod("Трапецеидальная", [1, 2, 3, 4])
-        ),
-      ]),
-      new Type("point2", [
-        new Term("bsas_2", new FuzzificationMethod("Треугольная", [1, 2, 3])),
-        new Term("other_2", new FuzzificationMethod("Прямоугольная", [1, 3])),
-      ]),
+      {
+        name: "Сервис",
+        terms: [
+          { name: "Плохой", termFunction: { name: "Треугольная", points: [0, 0, 4] } },
+          { name: "Хороший", termFunction: { name: "Трапецеидальная", points: [1, 4, 6, 9] } },
+          { name: "Великолепный", termFunction: { name: "Треугольная", points: [6, 9, 9] } },
+        ],
+      },
+      {
+        name: "Еда",
+        terms: [
+          {
+            name: "Отваратительная",
+            termFunction: { name: "Трапецеидальная", points: [0, 0, 1, 3] },
+          },
+          { name: "Вкусная", termFunction: { name: "Трапецеидальная", points: [6, 9, 9] } },
+        ],
+      },
+      {
+        name: "Чаевые",
+        terms: [
+          { name: "Мало", termFunction: { name: "Треугольная", points: [0, 5, 10] } },
+          { name: "Средне", termFunction: { name: "Треугольная", points: [10, 15, 20] } },
+          { name: "Щедро", termFunction: { name: "Треугольная", points: [20, 25, 30] } },
+        ],
+      },
     ];
     this.inputVariables = [
-      new InputVariable("city", this.types[0]),
-      new InputVariable("scoring", this.types[0]),
-      new InputVariable("occupation_type", this.types[0]),
-      new InputVariable("sel", this.types[1]),
-      new InputVariable("scoring_partner", this.types[1]),
+      { name: "Еда", type: this.types[1], value: 2 },
+      { name: "Сервис", type: this.types[0], value: 7 },
     ];
     this.outputVariables = [
-      new OutputVariable(
-        "credLimMul",
-        this.types[1],
-        1,
-        this.defuzzificationMethods[0]
-      ),
-      new OutputVariable(
-        "qualify",
-        this.types[1],
-        1,
-        this.defuzzificationMethods[0]
-      ),
+      { name: "Чаевые", type: this.types[2], def: 0, method: this.defuzzificationMethods[0] },
     ];
     this.rules = [
       {
@@ -219,9 +202,8 @@ export default {
         });
     },
   },
-  computed() {},
   mounted() {
-    this.$store.actions.getGraphicFromApi();
+    this.$store.dispatch("getGraphicFromApi");
   },
 };
 </script>
