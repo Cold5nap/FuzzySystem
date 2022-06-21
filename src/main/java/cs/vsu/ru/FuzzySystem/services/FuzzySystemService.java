@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import cs.vsu.ru.FuzzySystem.model.*;
+import lombok.NoArgsConstructor;
 
 import org.springframework.stereotype.Service;
 
@@ -36,6 +37,7 @@ import net.sourceforge.jFuzzyLogic.ruleConnectionMethod.RuleConnectionMethodAndM
 import net.sourceforge.jFuzzyLogic.ruleConnectionMethod.RuleConnectionMethodOrMax;
 
 @Service
+@NoArgsConstructor
 public class FuzzySystemService {
 
 	private void addTermsToVariable(Term[] terms, Variable var) throws Exception {
