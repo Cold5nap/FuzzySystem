@@ -75,7 +75,6 @@ public class TestTipperJava1 {
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
-		System.out.println("Begin TestTipperJava");
 
 		FIS fis = new FIS();
 
@@ -175,7 +174,7 @@ public class TestTipperJava1 {
 		ruleBlock.setRuleAccumulationMethod(new RuleAccumulationMethodMax());
 		ruleBlock.setRuleActivationMethod(new RuleActivationMethodMin());
 
-		// RULE 1 : IF service IS poor OR food is rancid THEN tip IS cheap;
+		// RULE 1 : IF service IS poor and food is rancid THEN tip IS cheap;
 		Rule rule1 = new Rule("Rule1", ruleBlock);
 		rule1.addAntecedent(service, "poor", false);
 		rule1.addAntecedent(food, "rancid", false);
@@ -216,11 +215,12 @@ public class TestTipperJava1 {
 
 		// ---
 		// Show generated FIS (FCL) and show animation
-		// ---
-		System.out.println(fis);
-		animateFis(fis);
-
-		System.out.println("End TestTipperJava");
+		// ---9
+		fis.getVariable("service").setValue(2);
+		fis.getVariable("food").setValue(7);
+		fis.evaluate();
+		JFuzzyChart.get().chart(fis);
+		System.out.println(functionBlock.getVariable("tip").toString());
 	}
 
 }

@@ -1,16 +1,8 @@
 package cs.vsu.ru.FuzzySystem;
 
-import java.util.Iterator;
-import java.util.Map;
-
-import org.assertj.core.data.MapEntry;
-
 import net.sourceforge.jFuzzyLogic.FIS;
 import net.sourceforge.jFuzzyLogic.FunctionBlock;
-import net.sourceforge.jFuzzyLogic.Gpr;
 import net.sourceforge.jFuzzyLogic.plot.JFuzzyChart;
-import net.sourceforge.jFuzzyLogic.rule.LinguisticTerm;
-import net.sourceforge.jFuzzyLogic.rule.Variable;
 
 /**
  * Test parsing an FCL file
@@ -30,7 +22,6 @@ public class TestTipper {
 
 		// Show ruleset
 		FunctionBlock functionBlock = fis.getFunctionBlock(null);
-		JFuzzyChart.get().chart(functionBlock);
 
 		// Set inputs
 		functionBlock.setVariable("service", 2);
@@ -40,15 +31,8 @@ public class TestTipper {
 		functionBlock.evaluate();
 
 		// Show output variable's chart
-		Variable tip = functionBlock.getVariable("tip");
-		JFuzzyChart.get().chart(tip, tip.getDefuzzifier(), true);
-		Iterator it = functionBlock.getVariable("service").getLinguisticTerms().entrySet().iterator();
-		while (it.hasNext()) {
-			Map.Entry p = (Map.Entry) it.next();
-			System.out.println(functionBlock.getVariable("service").getMembership((String) p.getKey()));
-		}
-		System.out.println();
-		Gpr.debug("poor[service]: " + functionBlock.getVariable("service").getMembership("poor"));
+		JFuzzyChart.get().chart(fis);
+		System.out.println(functionBlock.getVariable("tip").toString());
 
 	}
 }

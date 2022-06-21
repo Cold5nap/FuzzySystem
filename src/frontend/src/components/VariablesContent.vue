@@ -18,23 +18,34 @@
         :key="index"
       >
         <!--отображение данных-->
-        <div v-if="editableInputVariable !== variable">
+        <div v-show="editableInputVariable !== variable">
+          <div>
+            <label style="cursor: pointer" :for="'selectedInputVariable' + index"
+              >Переменная: {{ variable.name }}</label
+            >
+            <input
+              :id="'selectedInputVariable' + index"
+              type="radio"
+              class="mx-1 form-check-input"
+              name="selectedVariable"
+              @click="selectVariable(variable)"
+            />
+          </div>
           <div>Тип: {{ variable.type.name }}</div>
-          <div>Переменная: {{ variable.name }}</div>
           <div>Значение: {{ variable.value }}</div>
         </div>
 
         <!--изменение данных-->
         <div v-if="editableInputVariable === variable">
-          <select class="form-select" v-model="variable.type" @change="updateParentInputVariables">
-            <option v-for="type in types" :key="type.name" :value="type">{{ type.name }}</option>
-          </select>
           <input
             class="form-control"
             type="text"
             v-model="variable.name"
             @change="updateParentInputVariables"
           />
+          <select class="form-select" v-model="variable.type" @change="updateParentInputVariables">
+            <option v-for="type in types" :key="type.name" :value="type">{{ type.name }}</option>
+          </select>
           <input
             class="form-control"
             type="number"
@@ -43,11 +54,13 @@
           />
         </div>
 
+        <!-- Блок, если нет данных -->
         <div class="alert alert-danger" v-if="inputVariables.length === 0">
           Отсутвуют входные данные
         </div>
 
-        <span>
+        <!-- Блок действий с переменными -->
+        <span id="actionsInputVariables">
           <i
             class="bi bi-dash-square text-danger h5"
             style="cursor: pointer"
@@ -79,11 +92,27 @@
         v-for="(variable, index) in outputVariables"
         :key="index"
       >
-        <div v-if="editableOutputVariable !== variable">
-          <div>Переменная: {{ variable.name }}</div>
+        <div v-show="editableOutputVariable !== variable">
+          <div>
+            <label style="cursor: pointer" :for="'selectedOutputVariable' + index"
+              >Переменная: {{ variable.name }}</label
+            >
+            <input
+              :id="'selectedOutputVariable' + index"
+              type="radio"
+              class="mx-1 form-check-input"
+              name="selectedVariable"
+              :value="variable"
+              @click="selectVariable(variable)"
+            />
+          </div>
           <div>Тип: {{ variable.type.name }}</div>
-          <div>Тип: {{ variable.method.name }}</div>
+          <div>
+            Метод деффазификации: <br />
+            {{ variable.method.name }}
+          </div>
           <div>Значение поумолчанию: {{ variable.def }}</div>
+          <div v-if="variable.value != null">Значение: {{ variable.value }}</div>
         </div>
 
         <div v-if="editableOutputVariable === variable">
@@ -98,13 +127,6 @@
             <option v-for="type in types" :key="type.name" :value="type">{{ type.name }}</option>
           </select>
 
-          <input
-            class="form-control"
-            type="text"
-            v-model="variable.def"
-            @change="updateParentOutputVariables"
-          />
-
           <select
             class="form-select"
             v-model="variable.method"
@@ -114,13 +136,22 @@
               {{ method.name }}
             </option>
           </select>
+
+          <input
+            class="form-control"
+            type="text"
+            v-model="variable.def"
+            @change="updateParentOutputVariables"
+          />
         </div>
 
-        <div class="alert alert-danger" v-if="inputVariables.length === 0">
-          Отсутвуют входные данные
+        <!-- Блок отсутсвия выходных переменных -->
+        <div class="alert alert-danger" v-if="outputVariables.length === 0">
+          Отсутвуют выходные данные
         </div>
 
-        <span>
+        <!-- Действия с выходными переменными -->
+        <span id="actionsOutputVariables">
           <i
             class="bi bi-dash-square text-danger h5"
             style="cursor: pointer"
@@ -272,6 +303,9 @@ export default {
     };
   },
   methods: {
+    selectVariable(variable) {
+      this.$emit("updateSelectedVariable", variable);
+    },
     updateParentOutputVariables() {
       this.$emit("updateParentInputVariables", this.outputVariables);
     },

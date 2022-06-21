@@ -19,11 +19,35 @@
       >
         <div class="justify-content-between d-flex">
           <span
-            >Термины<span class="mx-1" v-if="editType !== type">{{ type.name }}</span>
-            <input class="form-check-input" type="radio" name="typeRadio" @click="selectType(type)"
+            >Тип:<label
+              style="cursor: pointer"
+              :for="'typeId' + index"
+              class="mx-1"
+              v-if="editType !== type"
+              >{{ type.name }}</label
+            >
+            <input
+              :id="'typeId' + index"
+              class="form-check-input"
+              type="radio"
+              name="typeRadio"
+              :value="type"
+              @click="selectType(type)"
           /></span>
 
           <span>
+            <i
+              v-show="!isVisibleArray[index]"
+              @click="isVisibleArray[index] = true"
+              class="bi bi-arrow-left-square text-muted h5"
+              style="cursor: pointer"
+            ></i>
+            <i
+              v-show="isVisibleArray[index]"
+              @click="isVisibleArray[index] = false"
+              class="bi bi-arrow-down-square text-muted h5"
+              style="cursor: pointer"
+            ></i>
             <i
               class="bi bi-plus-square text-success h5"
               style="cursor: pointer"
@@ -52,7 +76,7 @@
         />
 
         <!--список термов в типе-->
-        <ul id="terms" class="list-group" v-if="type.terms.length > 0">
+        <ul id="terms" class="list-group" v-if="type.terms.length > 0 && isVisibleArray[index]">
           <li
             class="list-group-item bg-success bg-opacity-10"
             v-for="(term, iTerm) in type.terms"
@@ -240,6 +264,8 @@ export default {
       editTermFunctionPoints: null, //что изменяется у термина
 
       types: this.parentTypes,
+
+      isVisibleArray: [], //свернуть термstyle="cursor: pointer"
     };
   },
   methods: {
@@ -293,6 +319,8 @@ export default {
     },
   },
   mounted() {},
-  created() {},
+  created() {
+    this.parentTypes.forEach(() => this.isVisibleArray.push(true));
+  },
 };
 </script>

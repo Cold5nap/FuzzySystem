@@ -5,10 +5,11 @@
 
     <!-- connection, accumulation, activator div-->
     <div class="row" v-if="!isEditUpperMethods">
-      <div class="col-auto">Оператор {{ $store.selectedOperator.name }}: алгоритм {{ $store.selectedAlgorithm }},</div>
-      <div class="col-auto">метод активации: {{ $store.selectedActivator }},</div>
+      <div class="col-auto">Оператор: {{ selectedOperator.name }},</div>
+      <div class="col-auto">алгоритм оператора: {{ selectedAlgorithm }},</div>
+      <div class="col-auto">метод активации: {{ selectedActivator }},</div>
       <div class="col-auto d-flex justify-content-between">
-        <div>метод накопления: {{ $store.selectedAccumulation }}.</div>
+        <div>метод накопления: {{ selectedAccumulation }}.</div>
         <div>
           <i
             @click="isEditUpperMethods = !isEditUpperMethods"
@@ -21,24 +22,31 @@
     <!-- edit div -->
     <div class="row" v-if="isEditUpperMethods">
       <div class="col-auto">
-        <label for="operator">Выберите оператор</label>
-        <select class="form-control" id="operator" v-model="$store.selectedOperator">
+        <label for="operator">Выберите операцию</label>
+        <select
+          class="form-control"
+          id="operator"
+          v-model="selectedOperator"
+          @change="selectedAlgorithm = selectedOperator.algorithms[0]"
+        >
           <option v-for="operator in this.operators" :key="operator.name" :value="operator">
             {{ operator.name }}
           </option>
         </select>
       </div>
 
-      <div class="col-auto" v-if="$store.selectedOperator != null">
-        <label for="algorithm">Выберите алгоритм оператора {{ $store.selectedOperator.name }}</label>
-        <select class="form-control" v-model="$store.selectedAlgorithm">
-          <option v-for="name in $store.selectedOperator.algorithms" :key="name" :value="name">{{ name }}</option>
+      <div class="col-auto" v-if="selectedOperator != null">
+        <label for="algorithm">Выберите алгоритм операции {{ selectedOperator.name }}</label>
+        <select class="form-control" v-model="selectedAlgorithm">
+          <option v-for="name in selectedOperator.algorithms" :key="name" :value="name">
+            {{ name }}
+          </option>
         </select>
       </div>
 
       <div class="col-auto">
-        <label for="algorithm">Выберите активатор</label>
-        <select class="form-control" v-model="$store.selectedActivator">
+        <label for="algorithm">Выберите метод активации</label>
+        <select class="form-control" v-model="selectedActivator">
           <option v-for="name in this.activators" :key="name" :value="name">{{ name }}</option>
         </select>
       </div>
@@ -46,9 +54,11 @@
       <div class="col-auto">
         <div class="d-flex justify-content-between">
           <div>
-            <label for="algorithm">Выберите метод накопления</label>
-            <select class="form-control" v-model="$store.selectedAccumulation">
-              <option v-for="name in this.accumulations" :key="name" :value="name">{{ name }}</option>
+            <label for="algorithm">Выберите метод аккумуляции</label>
+            <select class="form-control" v-model="selectedAccumulation">
+              <option v-for="name in this.accumulations" :key="name" :value="name">
+                {{ name }}
+              </option>
             </select>
           </div>
 
@@ -71,7 +81,9 @@
       <div class="col-auto" v-for="(condition, index) in rule.conditions" :key="index">
         <div class="row">
           <div class="col-auto" v-if="index > 0">{{ condition.conditionConnector }}</div>
-          <div class="col-auto">{{ condition.variable.name }} {{ condition.connection }} {{ condition.term.name }}</div>
+          <div class="col-auto">
+            {{ condition.variable.name }} {{ condition.connection }} {{ condition.term.name }}
+          </div>
         </div>
       </div>
 
@@ -86,14 +98,18 @@
 
       <div class="col">
         <div class="d-flex justify-content-between">
-          <span>Вес {{ rule.weight }}</span>
+          <span>Весовой коэффициент {{ rule.weight }}</span>
           <span>
             <i
               class="bi bi-dash-square text-danger h5"
               style="cursor: pointer"
               @click="this.$store.state.rules.splice(iRule, 1)"
             ></i>
-            <i class="bi bi-pencil-square text-info h5" style="cursor: pointer" @click="changeSelectedRule(rule)"></i>
+            <i
+              class="bi bi-pencil-square text-info h5"
+              style="cursor: pointer"
+              @click="changeSelectedRule(rule)"
+            ></i>
           </span>
         </div>
       </div>
@@ -114,7 +130,11 @@
           <div class="row">
             <div class="col-auto" v-if="index > 0">
               <label for="condition-connector">Оператор</label>
-              <select class="form-control" v-model="condition.conditionConnector" id="condition-connector">
+              <select
+                class="form-control"
+                v-model="condition.conditionConnector"
+                id="condition-connector"
+              >
                 <option>или</option>
                 <option>и</option>
               </select>
@@ -187,7 +207,7 @@
         </div>
 
         <div class="col-auto">
-          <label for="weight-rule">Вес</label>
+          <label for="weight-rule">Весовой коэффициент</label>
           <input
             class="form-control"
             type="number"
@@ -217,21 +237,21 @@ export default {
   data() {
     return {
       operators: [
-        { name: "or", algorithms: ["max", "asum", "bsum"] },
-        { name: "and", algorithms: ["min", "prod", "bdif"] },
+        { name: "или", algorithms: ["максимум", "алгебраическая сумма", "ограниченная сумма"] },
+        { name: "и", algorithms: ["минимум", "произведение", "ограниченная разность"] },
       ],
-      activators: ["prod", "min"],
-      accumulations: ["max", "bsum", "nsum"],
+      activators: ["произведение", "минимум"],
+      accumulations: ["максимум", "ограниченная сумма", "нормализированная сумма"],
       isEditUpperMethods: false,
 
       selectedName: null,
       selectedWeight: 1,
       selectedRule: {
-        name: "first rule",
+        name: "Первое правило",
         conditions: [
           {
             variable: this.$store.state.inputVariables[0],
-            connection: "это",
+            connection: "=",
             term: this.$store.state.inputVariables[0].type.terms[0],
             conditionConnector: null,
           },
@@ -239,7 +259,7 @@ export default {
         actions: [
           {
             variable: this.$store.state.outputVariables[0],
-            connection: "это",
+            connection: "=",
             term: this.$store.state.outputVariables[0].type.terms[0],
           },
         ],
@@ -248,10 +268,10 @@ export default {
     };
   },
   created() {
-    this.$store.selectedAccumulation = this.accumulations[0];
-    this.$store.selectedOperator = this.operators[1];
-    this.$store.selectedAlgorithm = this.operators[1].algorithms[1];
-    this.$store.selectedActivator = this.activators[1];
+    this.$store.commit("updateSelectedAlgorithm", this.operators[0].algorithms[0]);
+    this.$store.commit("updateSelectedAccumulation", this.accumulations[0]);
+    this.$store.commit("updateSelectedOperator", this.operators[0]);
+    this.$store.commit("updateSelectedActivator", this.activators[1]);
   },
   methods: {
     test() {
@@ -263,7 +283,7 @@ export default {
         conditions: [
           {
             variable: this.$store.state.inputVariables[0],
-            connection: "это",
+            connection: "=",
             term: this.$store.state.inputVariables[0].type.terms[0],
             conditionConnector: null,
           },
@@ -271,7 +291,7 @@ export default {
         actions: [
           {
             variable: this.$store.state.outputVariables[0],
-            connection: "это",
+            connection: "=",
             term: this.$store.state.outputVariables[0].type.terms[0],
           },
         ],
@@ -294,7 +314,7 @@ export default {
       if (this.selectedRule.conditions.length < this.$store.state.inputVariables.length) {
         this.selectedRule.conditions.push({
           variable: this.$store.state.inputVariables[0],
-          connection: "это",
+          connection: "=",
           term: this.$store.state.inputVariables[0].type.terms[0],
           conditionConnector: "и",
         });
@@ -304,7 +324,7 @@ export default {
       if (this.selectedRule.actions.length < this.$store.state.outputVariables.length) {
         this.selectedRule.actions.push({
           variable: this.$store.state.outputVariables[0],
-          connection: "это",
+          connection: "=",
           term: this.$store.state.outputVariables[0].type.terms[0],
         });
       }
@@ -313,6 +333,40 @@ export default {
       if (this.selectedRule.actions.length > 1) {
         this.selectedRule.actions.pop();
       }
+    },
+  },
+  computed: {
+    selectedOperator: {
+      get() {
+        return this.$store.getters.selectedOperator;
+      },
+      set(value) {
+        this.$store.commit("updateSelectedOperator", value);
+      },
+    },
+    selectedAlgorithm: {
+      get() {
+        return this.$store.getters.selectedAlgorithm;
+      },
+      set(value) {
+        this.$store.commit("updateSelectedAlgorithm", value);
+      },
+    },
+    selectedAccumulation: {
+      get() {
+        return this.$store.getters.selectedAccumulation;
+      },
+      set(value) {
+        this.$store.commit("updateSelectedAccumulation", value);
+      },
+    },
+    selectedActivator: {
+      get() {
+        return this.$store.getters.selectedActivator;
+      },
+      set(value) {
+        this.$store.commit("updateSelectedActivator", value);
+      },
     },
   },
 };

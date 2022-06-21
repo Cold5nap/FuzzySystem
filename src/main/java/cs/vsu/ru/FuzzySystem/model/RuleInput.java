@@ -7,7 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Term {
+public class RuleInput {
+    private Condition[] conditions;
+    private Action[] actions;
     private String name;
-    private Function termFunction;
+    private double weight;
 }

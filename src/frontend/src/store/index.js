@@ -13,6 +13,7 @@ export default createStore({
       selectedAlgorithm: null,
       selectedAccumulation: null,
       selectedActivator: null,
+      isColor: null,
     };
   },
   getters: {
@@ -22,8 +23,23 @@ export default createStore({
     getRules(state) {
       return state.rules;
     },
+    selectedOperator(state) {
+      return state.selectedOperator;
+    },
+    selectedAlgorithm(state) {
+      return state.selectedAlgorithm;
+    },
+    selectedAccumulation(state) {
+      return state.selectedAccumulation;
+    },
+    selectedActivator(state) {
+      return state.selectedActivator;
+    },
   },
   mutations: {
+    setIsColor(state, isColor) {
+      state.isColor = isColor;
+    },
     setInputVariables(state, vars) {
       state.inputVariables = vars;
     },
@@ -36,25 +52,45 @@ export default createStore({
     setGraphic(state, graphic) {
       state.graphic = graphic;
     },
+    updateSelectedOperator(state, operator) {
+      state.selectedOperator = operator;
+    },
+    updateSelectedAlgorithm(state, val) {
+      state.selectedAlgorithm = val;
+    },
+    updateSelectedAccumulation(state, val) {
+      state.selectedAccumulation = val;
+    },
+    updateSelectedActivator(state, val) {
+      state.selectedActivator = val;
+    },
   },
   actions: {
-    async getGraphicFromApi({ commit, state }) {
-      console.log(JSON.stringify(state.rules[0].actions[0].variable.method));
+    async getOutputValues({ state }) {
       return axios
         .post(
-          "http://localhost:8080/api/evualation",
-          { rules: JSON.stringify(state.rules[0].actions[0].variable.method) },
+          "http://localhost:8080/api/get_output",
+          JSON.stringify({
+            rules: state.rules,
+            inputVariables: state.inputVariables,
+            outputVariables: state.outputVariables,
+            operator: state.selectedOperator.name,
+            algorithm: state.selectedAlgorithm,
+            accumulation: state.selectedAccumulation,
+            activator: state.selectedActivator,
+          }),
           {
             headers: { "content-type": "application/json" },
           }
         )
         .then((response) => {
           state.isLoading = true;
-          console.log(response.data);
-          commit("setGraphic", response.data);
+          Object.entries(response.data).forEach((entry) => {
+            state.outputVariables.find((v) => v.name == entry[0]).value = entry[1];
+          });
         })
         .catch((error) => console.log(error))
-        .finally(() => (this.isLoading = false));
+        .finally(() => (state.isLoading = false));
     },
   },
   modules: {},
