@@ -42,23 +42,32 @@ public class FuzzySystemService {
 		// добавляем термины
 		for (Term term : terms) {
 			Function func = term.getTermFunction();
-			MembershipFunction membershipFunction = switch (func.getName().toLowerCase()) {
-				case ("треугольная") -> new MembershipFunctionTriangular(
-						new Value(func.getPoints()[0]),
-						new Value(func.getPoints()[1]),
-						new Value(func.getPoints()[2]));
-				case ("трапецеидальная") -> new MembershipFunctionTrapetzoidal(
-						new Value(func.getPoints()[0]),
-						new Value(func.getPoints()[1]),
-						new Value(func.getPoints()[2]),
-						new Value(func.getPoints()[3]));
-				case ("прямоугольная") -> new MembershipFunctionTrapetzoidal(
-						new Value(func.getPoints()[0]),
-						new Value(func.getPoints()[0]),
-						new Value(func.getPoints()[1]),
-						new Value(func.getPoints()[1]));
-				default -> throw new Exception("Переданна необрабатываемая функция.");
-			};
+			MembershipFunction membershipFunction;
+			switch (func.getName().toLowerCase()) {
+				case ("треугольная"):
+					membershipFunction = new MembershipFunctionTriangular(
+							new Value(func.getPoints()[0]),
+							new Value(func.getPoints()[1]),
+							new Value(func.getPoints()[2]));
+					break;
+				case ("трапецеидальная"):
+					membershipFunction = new MembershipFunctionTrapetzoidal(
+							new Value(func.getPoints()[0]),
+							new Value(func.getPoints()[1]),
+							new Value(func.getPoints()[2]),
+							new Value(func.getPoints()[3]));
+					break;
+				case ("прямоугольная"):
+					membershipFunction = new MembershipFunctionTrapetzoidal(
+							new Value(func.getPoints()[0]),
+							new Value(func.getPoints()[0]),
+							new Value(func.getPoints()[1]),
+							new Value(func.getPoints()[1]));
+					break;
+				default:
+					throw new Exception("Переданна необрабатываемая функция.");
+			}
+			;
 			var.add(new LinguisticTerm(term.getName(), membershipFunction));
 		}
 	}
@@ -83,14 +92,27 @@ public class FuzzySystemService {
 			Variable var = new Variable(outputVariable.getName());
 			functionBlock.setVariable(var.getName(), var);
 			addTermsToVariable(outputVariable.getType().getTerms(), var);
-			Defuzzifier defuzzifier = switch (outputVariable.getMethod().getName().toLowerCase()) {
-				case ("центр тяжести") -> new DefuzzifierCenterOfGravity(var);
-				case ("центр площади") -> new DefuzzifierCenterOfArea(var);
-				case ("центр тяжести для синглтонов") -> new DefuzzifierCenterOfGravitySingletons(var);
-				case ("крайний левый максимум") -> new DefuzzifierLeftMostMax(var);
-				case ("крайний правый максимум") -> new DefuzzifierRightMostMax(var);
-				default -> throw new Exception("Неверный метод деффазификации.");
-			};
+			Defuzzifier defuzzifier;
+			switch (outputVariable.getMethod().getName().toLowerCase()) {
+				case ("центр тяжести"):
+					defuzzifier = new DefuzzifierCenterOfGravity(var);
+					break;
+				case ("центр площади"):
+					defuzzifier = new DefuzzifierCenterOfArea(var);
+					break;
+				case ("центр тяжести для синглтонов"):
+					defuzzifier = new DefuzzifierCenterOfGravitySingletons(var);
+					break;
+				case ("крайний левый максимум"):
+					defuzzifier = new DefuzzifierLeftMostMax(var);
+					break;
+				case ("крайний правый максимум"):
+					defuzzifier = new DefuzzifierRightMostMax(var);
+					break;
+				default:
+					throw new Exception("Неверный метод деффазификации.");
+			}
+			;
 			var.setDefuzzifier(defuzzifier);
 			var.setDefaultValue(outputVariable.getDef());
 		}
@@ -100,20 +122,36 @@ public class FuzzySystemService {
 		ruleBlock.setName("Блок правил");
 
 		// задаем метод аккумулирования
-		RuleAccumulationMethod ruleAccumulationMethod = switch (fuzzySystem.getAccumulation().toLowerCase()) {
-			case ("максимум") -> new RuleAccumulationMethodMax();
-			case ("ограниченная сумма") -> new RuleAccumulationMethodBoundedSum();
-			case ("нормализированная сумма") -> new RuleAccumulationMethodNormedSum();
-			default -> throw new Exception("Неверный метод аккумуляции.");
-		};
+		RuleAccumulationMethod ruleAccumulationMethod;
+		switch (fuzzySystem.getAccumulation().toLowerCase()) {
+			case ("максимум"):
+				ruleAccumulationMethod = new RuleAccumulationMethodMax();
+				break;
+			case ("ограниченная сумма"):
+				ruleAccumulationMethod = new RuleAccumulationMethodBoundedSum();
+				break;
+			case ("нормализированная сумма"):
+				ruleAccumulationMethod = new RuleAccumulationMethodNormedSum();
+				break;
+			default:
+				throw new Exception("Неверный метод аккумуляции.");
+		}
+		;
 		ruleBlock.setRuleAccumulationMethod(ruleAccumulationMethod);
 
 		// задаем метод активации
-		RuleActivationMethod ruleActivationMethod = switch (fuzzySystem.getActivator()) {
-			case ("произведение") -> new RuleActivationMethodProduct();
-			case ("минимум") -> new RuleActivationMethodMin();
-			default -> throw new Exception("Неверный метод активации.");
-		};
+		RuleActivationMethod ruleActivationMethod;
+		switch (fuzzySystem.getActivator()) {
+			case ("произведение"):
+				ruleActivationMethod = new RuleActivationMethodProduct();
+				break;
+			case ("минимум"):
+				ruleActivationMethod = new RuleActivationMethodMin();
+				break;
+			default:
+				throw new Exception("Неверный метод активации.");
+		}
+		;
 		ruleBlock.setRuleActivationMethod(ruleActivationMethod);
 
 		// задаем правила
@@ -124,11 +162,18 @@ public class FuzzySystemService {
 			Condition[] conditions = ruleInput.getConditions();
 			for (Condition condition : conditions) {
 				// отрицание в условии
-				boolean isNegative = switch (condition.getConnection()) {
-					case ("=") -> false;
-					case ("&#8800;") -> true;
-					default -> throw new Exception("Неверный оператор условия.");
-				};
+				boolean isNegative;
+				switch (condition.getConnection()) {
+					case ("="):
+						isNegative = false;
+						break;
+					case ("&#8800;"):
+						isNegative = true;
+						break;
+					default:
+						throw new Exception("Неверный оператор условия.");
+				}
+				;
 				// Задаем условие
 				RuleTerm ruleTerm = new RuleTerm(
 						functionBlock.getVariable(condition.getVariable().getName()),
@@ -138,13 +183,18 @@ public class FuzzySystemService {
 							isNegative);
 				} else {
 					switch (condition.getConditionConnector()) {
-						case ("и") -> rule.setAntecedents(new RuleExpression(
-								rule.getAntecedents(), ruleTerm,
-								RuleConnectionMethodAndMin.get()));
-						case ("или") -> rule.setAntecedents(new RuleExpression(
-								rule.getAntecedents(), ruleTerm,
-								RuleConnectionMethodOrMax.get()));
-						default -> throw new Exception("Неверная связь между условиями.");
+						case ("и"):
+							rule.setAntecedents(new RuleExpression(
+									rule.getAntecedents(), ruleTerm,
+									RuleConnectionMethodAndMin.get()));
+							break;
+						case ("или"):
+							rule.setAntecedents(new RuleExpression(
+									rule.getAntecedents(), ruleTerm,
+									RuleConnectionMethodOrMax.get()));
+							break;
+						default:
+							throw new Exception("Неверная связь между условиями.");
 					}
 				}
 
