@@ -69,7 +69,7 @@ export default createStore({
     async getOutputValues({ state }) {
       return axios
         .post(
-          "http://localhost:8080/api/get_output",
+          "/api/get_output",
           JSON.stringify({
             rules: state.rules,
             inputVariables: state.inputVariables,
