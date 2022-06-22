@@ -1,99 +1,111 @@
 package cs.vsu.ru.FuzzySystem.services;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import cs.vsu.ru.FuzzySystem.model.*;
-import lombok.NoArgsConstructor;
 
 import org.springframework.stereotype.Service;
 
-import net.sourceforge.jFuzzyLogic.FIS;
-import net.sourceforge.jFuzzyLogic.FunctionBlock;
+import net.sourceforge.jFuzzyLogic.rule.*;
+import net.sourceforge.jFuzzyLogic.ruleAggregation.RuleAggregationMethoNormedSum;
+import net.sourceforge.jFuzzyLogic.ruleAggregation.RuleAggregationMethodBoundedSum;
+import net.sourceforge.jFuzzyLogic.ruleAggregation.RuleAggregationMethodMax;
+import net.sourceforge.jFuzzyLogic.ruleAggregation.RuleAggregationMethodProbOr;
+import net.sourceforge.jFuzzyLogic.ruleAggregation.RuleAggregationMethodSum;
+import net.sourceforge.jFuzzyLogic.ruleConnection.RuleConnectionMethodAndMin;
+import net.sourceforge.jFuzzyLogic.ruleConnection.RuleConnectionMethodOrMax;
 import net.sourceforge.jFuzzyLogic.defuzzifier.DefuzzifierCenterOfGravity;
 import net.sourceforge.jFuzzyLogic.defuzzifier.DefuzzifierCenterOfGravitySingletons;
 import net.sourceforge.jFuzzyLogic.defuzzifier.DefuzzifierLeftMostMax;
 import net.sourceforge.jFuzzyLogic.defuzzifier.DefuzzifierRightMostMax;
+import net.sourceforge.jFuzzyLogic.FIS;
 import net.sourceforge.jFuzzyLogic.defuzzifier.Defuzzifier;
 import net.sourceforge.jFuzzyLogic.defuzzifier.DefuzzifierCenterOfArea;
 import net.sourceforge.jFuzzyLogic.membership.MembershipFunction;
 import net.sourceforge.jFuzzyLogic.membership.MembershipFunctionTrapetzoidal;
 import net.sourceforge.jFuzzyLogic.membership.MembershipFunctionTriangular;
-import net.sourceforge.jFuzzyLogic.membership.Value;
-import net.sourceforge.jFuzzyLogic.rule.LinguisticTerm;
-import net.sourceforge.jFuzzyLogic.rule.Rule;
-import net.sourceforge.jFuzzyLogic.rule.RuleBlock;
-import net.sourceforge.jFuzzyLogic.rule.RuleExpression;
-import net.sourceforge.jFuzzyLogic.rule.RuleTerm;
-import net.sourceforge.jFuzzyLogic.rule.Variable;
-import net.sourceforge.jFuzzyLogic.ruleAccumulationMethod.RuleAccumulationMethod;
-import net.sourceforge.jFuzzyLogic.ruleAccumulationMethod.RuleAccumulationMethodBoundedSum;
-import net.sourceforge.jFuzzyLogic.ruleAccumulationMethod.RuleAccumulationMethodMax;
-import net.sourceforge.jFuzzyLogic.ruleAccumulationMethod.RuleAccumulationMethodNormedSum;
-import net.sourceforge.jFuzzyLogic.ruleActivationMethod.RuleActivationMethod;
-import net.sourceforge.jFuzzyLogic.ruleActivationMethod.RuleActivationMethodMin;
-import net.sourceforge.jFuzzyLogic.ruleActivationMethod.RuleActivationMethodProduct;
-import net.sourceforge.jFuzzyLogic.ruleConnectionMethod.RuleConnectionMethodAndMin;
-import net.sourceforge.jFuzzyLogic.ruleConnectionMethod.RuleConnectionMethodOrMax;
+import net.sourceforge.jFuzzyLogic.ruleImplication.RuleImplicationMethodMin;
+import net.sourceforge.jFuzzyLogic.ruleImplication.RuleImplicationMethodProduct;
 
 @Service
-@NoArgsConstructor
 public class FuzzySystemService {
 
-	private void addTermsToVariable(Term[] terms, Variable var) throws Exception {
-		// добавляем термины
+	private Variable variableWithTerms(Term[] terms, CommonVariable iv) throws Exception {
+		Variable var = new Variable(iv.getName());
 		for (Term term : terms) {
 			Function func = term.getTermFunction();
 			MembershipFunction membershipFunction;
 			switch (func.getName().toLowerCase()) {
 				case ("треугольная"):
 					membershipFunction = new MembershipFunctionTriangular(
-							new Value(func.getPoints()[0]),
-							new Value(func.getPoints()[1]),
-							new Value(func.getPoints()[2]));
+							func.getPoints()[0],
+							func.getPoints()[1],
+							func.getPoints()[2]);
 					break;
 				case ("трапецеидальная"):
 					membershipFunction = new MembershipFunctionTrapetzoidal(
-							new Value(func.getPoints()[0]),
-							new Value(func.getPoints()[1]),
-							new Value(func.getPoints()[2]),
-							new Value(func.getPoints()[3]));
+							func.getPoints()[0],
+							func.getPoints()[1],
+							func.getPoints()[2],
+							func.getPoints()[3]);
 					break;
 				case ("прямоугольная"):
 					membershipFunction = new MembershipFunctionTrapetzoidal(
-							new Value(func.getPoints()[0]),
-							new Value(func.getPoints()[0]),
-							new Value(func.getPoints()[1]),
-							new Value(func.getPoints()[1]));
+							func.getPoints()[0],
+							func.getPoints()[0],
+							func.getPoints()[1],
+							func.getPoints()[1]);
 					break;
 				default:
 					throw new Exception("Переданна необрабатываемая функция.");
 			}
-			;
-			var.add(new LinguisticTerm(term.getName(), membershipFunction));
+			LinguisticTerm lt = new LinguisticTerm(term.getName(), membershipFunction);
+			var.add(lt);
 		}
+		return var;
 	}
 
 	public FIS getEvaluatedFIS(FuzzySystem fuzzySystem) throws Exception {
 		// создаем нечеткую систему
 		FIS fis = new FIS();
-		FunctionBlock functionBlock = new FunctionBlock(fis);
-		fis.addFunctionBlock("name", functionBlock);
 
+		// Задаем блок с правилами
+		FuzzyRuleSet rs = new FuzzyRuleSet();
+		List<Variable> vars = new ArrayList<>();
 		// добавление входных данных в функциональный блок
 		for (InputVariable inputVariable : fuzzySystem.getInputVariables()) {
-			Variable var = new Variable(inputVariable.getName());
-			// задаем значение переменной
-			var.setValue(inputVariable.getValue());
-			functionBlock.setVariable(var.getName(), var);
-			addTermsToVariable(inputVariable.getType().getTerms(), var);
+			// создаем переменную
+			Variable variable = variableWithTerms(inputVariable.getType().getTerms(), inputVariable);
+			variable.setValue(inputVariable.getValue());
+			// задаем метод аккумулирования
+			switch (fuzzySystem.getAccumulation().toLowerCase()) {
+				case ("максимум"):
+					variable.setRuleAggregationMethod(new RuleAggregationMethodMax());
+					break;
+				case ("ограниченная разность"):
+					variable.setRuleAggregationMethod(new RuleAggregationMethodProbOr());
+					break;
+				case ("алгебраическая сумма"):
+					variable.setRuleAggregationMethod(new RuleAggregationMethodSum());
+					break;
+				case ("ограниченная сумма"):
+					variable.setRuleAggregationMethod(new RuleAggregationMethodBoundedSum());
+					break;
+				case ("нормализированная сумма"):
+					variable.setRuleAggregationMethod(new RuleAggregationMethoNormedSum());
+					break;
+				default:
+					throw new Exception("Неверный метод аккумуляции.");
+			}
+			vars.add(variable);
 		}
 
 		// добавление выходящих данных в функциональный блок
 		for (OutputVariable outputVariable : fuzzySystem.getOutputVariables()) {
-			Variable var = new Variable(outputVariable.getName());
-			functionBlock.setVariable(var.getName(), var);
-			addTermsToVariable(outputVariable.getType().getTerms(), var);
+			Variable var = variableWithTerms(outputVariable.getType().getTerms(), outputVariable);
 			Defuzzifier defuzzifier;
 			switch (outputVariable.getMethod().getName().toLowerCase()) {
 				case ("центр тяжести"):
@@ -117,49 +129,24 @@ public class FuzzySystemService {
 			;
 			var.setDefuzzifier(defuzzifier);
 			var.setDefaultValue(outputVariable.getDef());
+			vars.add(var);
 		}
-
-		// Задаем блок с правилами
-		RuleBlock ruleBlock = new RuleBlock(functionBlock);
-		ruleBlock.setName("Блок правил");
-
-		// задаем метод аккумулирования
-		RuleAccumulationMethod ruleAccumulationMethod;
-		switch (fuzzySystem.getAccumulation().toLowerCase()) {
-			case ("максимум"):
-				ruleAccumulationMethod = new RuleAccumulationMethodMax();
-				break;
-			case ("ограниченная сумма"):
-				ruleAccumulationMethod = new RuleAccumulationMethodBoundedSum();
-				break;
-			case ("нормализированная сумма"):
-				ruleAccumulationMethod = new RuleAccumulationMethodNormedSum();
-				break;
-			default:
-				throw new Exception("Неверный метод аккумуляции.");
-		}
-		;
-		ruleBlock.setRuleAccumulationMethod(ruleAccumulationMethod);
 
 		// задаем метод активации
-		RuleActivationMethod ruleActivationMethod;
 		switch (fuzzySystem.getActivator()) {
 			case ("произведение"):
-				ruleActivationMethod = new RuleActivationMethodProduct();
+				rs.setRuleImplicationMethod(new RuleImplicationMethodProduct());
 				break;
 			case ("минимум"):
-				ruleActivationMethod = new RuleActivationMethodMin();
+				rs.setRuleImplicationMethod(new RuleImplicationMethodMin());
 				break;
 			default:
 				throw new Exception("Неверный метод активации.");
 		}
-		;
-		ruleBlock.setRuleActivationMethod(ruleActivationMethod);
 
 		// задаем правила
 		for (RuleInput ruleInput : fuzzySystem.getRules()) {
-			Rule rule = new Rule(ruleInput.getName(), ruleBlock);
-
+			FuzzyRule rule = new FuzzyRule(ruleInput.getName());
 			// задаем условия
 			Condition[] conditions = ruleInput.getConditions();
 			for (Condition condition : conditions) {
@@ -175,10 +162,16 @@ public class FuzzySystemService {
 					default:
 						throw new Exception("Неверный оператор условия.");
 				}
-				;
-				// Задаем условие
-				RuleTerm ruleTerm = new RuleTerm(
-						functionBlock.getVariable(condition.getVariable().getName()),
+
+				Variable var = vars.stream()
+						.filter(a -> condition.getVariable().getName().equals(a.getName()))
+						.findFirst()
+						.orElse(null);
+				if (null == var) {
+					throw new Exception("Ошибка поиска переменной.");
+				}
+				FuzzyRuleTerm ruleTerm = new FuzzyRuleTerm(
+						var,
 						condition.getTerm().getName(), isNegative);
 				if (condition.getConditionConnector() == null) {
 					rule.addAntecedent(ruleTerm.getVariable(), ruleTerm.getTermName(),
@@ -186,14 +179,14 @@ public class FuzzySystemService {
 				} else {
 					switch (condition.getConditionConnector()) {
 						case ("и"):
-							rule.setAntecedents(new RuleExpression(
+							rule.setAntecedents(new FuzzyRuleExpression(
 									rule.getAntecedents(), ruleTerm,
-									RuleConnectionMethodAndMin.get()));
+									new RuleConnectionMethodAndMin()));
 							break;
 						case ("или"):
-							rule.setAntecedents(new RuleExpression(
+							rule.setAntecedents(new FuzzyRuleExpression(
 									rule.getAntecedents(), ruleTerm,
-									RuleConnectionMethodOrMax.get()));
+									new RuleConnectionMethodOrMax()));
 							break;
 						default:
 							throw new Exception("Неверная связь между условиями.");
@@ -205,21 +198,20 @@ public class FuzzySystemService {
 			// Задали постусловие
 			Action[] actions = ruleInput.getActions();
 			for (Action action : actions) {
-				rule.addConsequent(functionBlock.getVariable(action.getVariable().getName()),
+				Variable var = vars.stream()
+						.filter(a -> action.getVariable().getName().equals(a.getName()))
+						.findFirst()
+						.orElse(null);
+				rule.addConsequent(var,
 						action.getTerm().getName(), false);
 			}
 
 			rule.setWeight(ruleInput.getWeight());
-			ruleBlock.add(rule);
+			rs.add(rule);
 		}
-		// Задаем блок правил
-		HashMap<String, RuleBlock> ruleBlocksMap = new HashMap<String, RuleBlock>();
-		ruleBlocksMap.put(ruleBlock.getName(), ruleBlock);
-		functionBlock.setRuleBlocks(ruleBlocksMap);
 
-		// Вычисляем выходные данные
-		fis.evaluate();
-
+		rs.evaluate();
+		fis.addFuzzyRuleSet("ruleset", rs);
 		return fis;
 	}
 
@@ -228,7 +220,8 @@ public class FuzzySystemService {
 		FIS fis = getEvaluatedFIS(fs);
 		for (OutputVariable outputVariable : fs.getOutputVariables()) {
 			values.put(outputVariable.getName(),
-					Math.ceil(fis.getVariable(outputVariable.getName()).getValue() * 1000) / 1000);
+					Math.ceil(fis.getFuzzyRuleSet().getVariable(outputVariable.getName()).getLatestDefuzzifiedValue()
+							* 1000) / 1000);
 		}
 		return values;
 	}

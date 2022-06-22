@@ -1,14 +1,11 @@
 package cs.vsu.ru.FuzzySystem.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class InputVariable {
+public class InputVariable extends CommonVariable {
     private double value;
-    private String name;
-    private Type type;
 }
