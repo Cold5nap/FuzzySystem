@@ -1,0 +1,41 @@
+FUNCTION_BLOCK fbName
+
+VAR_INPUT
+	Food : REAL;
+	Service : REAL;
+END_VAR
+
+VAR_OUTPUT
+	Tip : REAL;
+END_VAR
+
+FUZZIFY Food
+	TERM delicious := trian 6.0 9.0 9.0;
+	TERM disgusting := trape 0.0 0.0 1.0 3.0;
+END_FUZZIFY
+
+FUZZIFY Service
+	TERM great := trian 6.0 9.0 9.0;
+	TERM bad := trian 0.0 0.0 4.0;
+	TERM good := trape 1.0 4.0 6.0 9.0;
+END_FUZZIFY
+
+DEFUZZIFY Tip
+	TERM few := trian 0.0 5.0 10.0;
+	TERM normal := trian 10.0 15.0 20.0;
+	TERM generous := trian 20.0 25.0 30.0;
+	ACCU : SUM;
+	METHOD : COG;
+	DEFAULT := 0.0;
+	RANGE := (0.0 .. 30.0);
+END_DEFUZZIFY
+
+RULEBLOCK Rules
+	ACT : MIN;
+	AND : MIN;
+	RULE 1 : IF (Service is bad) and Food is disgusting THEN Tip is few;
+	RULE 2 : IF Service is good THEN Tip is normal;
+	RULE 3 : IF (Service is great) and Food is delicious THEN Tip is generous;
+END_RULEBLOCK
+
+END_FUNCTION_BLOCK
