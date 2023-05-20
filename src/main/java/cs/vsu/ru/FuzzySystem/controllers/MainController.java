@@ -20,7 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.Map;
 
-@CrossOrigin(origins = "http://localhost:8081")
+
 @RestController
 @RequestMapping("/api")
 public class MainController {
