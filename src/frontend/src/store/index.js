@@ -11,7 +11,7 @@ export default createStore({
 	state () {
 		return {
 			// url: 'http://localhost:8080',
-			url: 'http://vizual-fuzzy-control-laguage.fiori-vrn.ru',
+			url: 'http://visual-fuzzy-control-language.fiori-vrn.ru',
 			isLoading: false,
 			graphic: null,
 			selectedType: null,
