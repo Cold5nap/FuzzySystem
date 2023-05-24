@@ -142,6 +142,9 @@ export default {
 			} else {
 				state.selected.actions[obj.indexClause].connection= obj.connection
 			}
+		},
+		setConditionConnector (state,obj) {
+			state.selected.conditions[obj.conditionIndex].conditionConnector=obj.connector
 		}
   },
 }

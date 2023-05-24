@@ -95,13 +95,14 @@
         b Если
       .col-auto(v-for="(condition, index) in ruleStore.selected.conditions")
         .row
-          //- .col-auto(v-if="index > 0")
-          //-   label(for="condition-connector") Оператор
-          //-   select#condition-connector.form-control(
-          //-     v-model="condition.conditionConnector"
-          //-   )
-          //-     option или
-          //-     option и
+          .col-auto(v-if="index > 0")
+            label(for="condition-connector") Оператор
+            select#condition-connector.form-control(
+              :value="condition.conditionConnector",
+							@change="setConditionConnector({conditionIndex:index,connector:$event.target.value})"
+            )
+              option или
+              option и
           .col
             clause(
               :variables="$store.state.variable.inputVariables",
@@ -262,6 +263,7 @@ export default {
     ...mapMutations([
       "setRules",
       "addRule",
+      "setConditionConnector",
       "setAccumulation",
       "setActivator",
       "changeSelectedRule",
